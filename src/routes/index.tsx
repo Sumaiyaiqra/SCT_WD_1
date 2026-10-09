@@ -1,24 +1,34 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { ArrowDown, ArrowUpRight, Utensils, Menu, X, Star, Leaf, Flame, Heart, ChefHat } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import hero from '@/assets/burger-hero.jpg';
+import burger from '@/assets/menu-burger.jpg';
+import pizza from '@/assets/menu-pizza.jpg';
+import salad from '@/assets/menu-salad.jpg';
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
+export const Route = createFileRoute('/')({
+ head: () => ({meta: [{title:'Bite & Co. | Good food. Great mood.'},{name:'description',content:'Discover the Bite & Co. menu: stacked burgers, stone-baked pizzas, and fresh bowls.'},{property:'og:title',content:'Bite & Co. | Good food. Great mood.'},{property:'og:description',content:'Find your next favorite bite. Explore burgers, pizzas, and fresh bowls.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),
+ component: Index,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+const dishes = [
+ {name:'The Classic Smash', category:'Burgers',image:burger,tag:'House favorite', description:'Double smashed patties, melted cheddar, crisp lettuce, pickles & our signature sauce.',ingredients:'Beef patties, brioche bun, cheddar, lettuce, pickles, house sauce.',allergens:'Contains wheat, milk, and egg.',icon:Flame},
+ {name:'Margherita, Made Right', category:'Pizzas',image:pizza,tag:'A little Italian love', description:'Stone-baked crust, rich tomato sauce, creamy mozzarella & a handful of fresh basil.',ingredients:'Pizza dough, tomato sauce, mozzarella, fresh basil, olive oil.',allergens:'Contains wheat and milk.',icon:Heart},
+ {name:'The Green Goodness', category:'Bowls',image:salad,tag:'Fresh & feel-good', description:'Crunchy greens, ripe avocado, cherry tomatoes & feta, with a bright lemon dressing.',ingredients:'Leafy greens, avocado, cucumber, tomato, feta, lemon dressing.',allergens:'Contains milk.',icon:Leaf},
+];
+function Index(){
+ const [scrolled,setScrolled]=useState(false); const [open,setOpen]=useState(false); const [active,setActive]=useState('home'); const [category,setCategory]=useState('All dishes'); const [selected,setSelected]=useState<(typeof dishes)[number] | null>(null);
+ useEffect(()=>{const onScroll=()=>{setScrolled(window.scrollY>40); const sections=['home','menu','story','contact']; let current='home'; for(const id of sections){const el=document.getElementById(id);if(el && el.getBoundingClientRect().top<160) current=id;}setActive(current);};onScroll();window.addEventListener('scroll',onScroll,{passive:true});return()=>window.removeEventListener('scroll',onScroll);},[]);
+ const links=[['home','Home'],['menu','Our Menu'],['story','Our Story'],['contact','Contact']];
+ return <>
+ <header className={`site-nav ${scrolled?'scrolled':''}`}><div className="container nav-inner"><a className="brand" href="#home" aria-label="Bite and Co. home"><Utensils/><span>BITE<span>&</span>CO.</span></a><nav aria-label="Main navigation" className={`nav-links ${open?'open':''}`}>{links.map(([id,label])=><a key={id} href={`#${id}`} className={active===id?'active':''} aria-current={active===id?'location':undefined} onClick={()=>setOpen(false)}>{label}</a>)}</nav><Button asChild className="nav-cta"><a href="#menu">Explore the menu <ArrowUpRight/></a></Button><Button variant="ghost" size="icon" className="mobile-toggle" aria-label={open?'Close menu':'Open menu'} aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</Button></div></header>
+ <main><section className="hero" id="home"><img className="hero-image" src={hero} width={1600} height={1008} alt="Double cheeseburger with golden fries"/><div className="container hero-inner"><div className="eyebrow">Fresh flavors. Happy people.</div><h1>GOOD FOOD.<br/><span>GREAT MOOD.</span></h1><p>Big flavors. Fresh ingredients. A little extra love.<br/>Your next favorite bite is right here.</p><div className="hero-actions"><Button asChild><a href="#menu">Explore our menu <ArrowUpRight/></a></Button><Button variant="heroOutline" asChild><a href="#story">Our story</a></Button></div><div className="hero-note"><Heart/>Made with love. Served with a smile.</div></div><div className="food-stamp"><Star/><span>All about</span><strong>THE BITE</strong><span>Not the ordinary</span></div></section>
+ <div className="ticker" aria-hidden="true"><span>Fresh ingredients</span><Star/><span>Bold flavors</span><Star/><span>Good company</span><Star/><span>Made with love</span><Star/><span>Fresh ingredients</span></div>
+ <section id="menu" className="container menu-section"><div className="section-heading"><div><div className="eyebrow">Something for every craving</div><h2>MEET YOUR NEXT FAVORITE.</h2></div><p>Comfort classics. Fresh twists.<br/>Every bite worth coming back for.</p></div><div className="filters" aria-label="Food categories">{['All dishes','Burgers','Pizzas','Bowls'].map(item=><Button key={item} variant={category===item?'default':'outline'} aria-pressed={category===item} onClick={()=>setCategory(item)}>{item==='All dishes'&&<Utensils/>}{item}</Button>)}</div><div className="menu-grid">{dishes.filter(d=>category==='All dishes'||d.category===category).map(d=><article className="food-card" key={d.name}><div className="food-image-wrap"><img src={d.image} loading="lazy" width={912} height={736} alt={d.name}/><span className="food-tag">{d.tag}</span></div><div className="food-content"><h3>{d.name}</h3><p>{d.description}</p><div className="food-bottom"><span className="food-category"><d.icon/>{d.category}</span><Button variant="ghost" size="icon" aria-label={`View ${d.name}`} title={`View ${d.name}`} onClick={()=>setSelected(d)}><ArrowUpRight/></Button></div></div></article>)}</div></section>
+ <section id="story" className="story"><div className="container story-inner"><div><div className="eyebrow">A seat at our table</div><h2>GOOD FOOD BRINGS<br/>PEOPLE TOGETHER.</h2></div><div><p>We’re here for the simple things. A burger that hits the spot. A pizza shared with friends. A fresh bowl that brightens your day.</p><p>At Bite & Co., the best moments start with something delicious.</p><div className="story-values"><span><Leaf/>Fresh ingredients</span><span><ChefHat/>Thoughtfully made</span><span><Heart/>Always with love</span></div></div></div></section>
+ <section id="contact" className="container contact"><div className="eyebrow justify-center">Come hungry. Leave happy.</div><h2 className="mt-4">WHAT ARE YOU CRAVING?</h2><p>Find a little comfort, a little crunch, and a whole lot of flavor.</p><Button asChild><a href="#menu">Find your favorite <ArrowDown/></a></Button></section></main>
+ <footer><div className="container footer-inner"><a className="brand" href="#home"><Utensils/><span>BITE<span>&</span>CO.</span></a><p>Good food. Great mood. © {new Date().getFullYear()} Bite & Co.</p><Button variant="heroOutline" size="icon" asChild><a href="#home" aria-label="Back to top" title="Back to top"><ArrowUpRight/></a></Button></div></footer>
+ <Dialog open={selected!==null} onOpenChange={value=>{if(!value)setSelected(null)}}><DialogContent>{selected&&<><img className="detail-image" src={selected.image} alt={selected.name}/><DialogHeader><DialogTitle className="font-display text-3xl">{selected.name}</DialogTitle><DialogDescription>{selected.description}</DialogDescription></DialogHeader><div className="detail-description"><strong>Ingredients</strong><p>{selected.ingredients}</p><strong>Allergens</strong><p>{selected.allergens}</p></div></>}</DialogContent></Dialog>
+ </>;
 }
